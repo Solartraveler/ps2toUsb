@@ -15,6 +15,14 @@ PS/2 to USB converter, based on an AVR
 
 -The power on/off button on the keyboard does not send a scancode
 
+## Flashing
+
+You can either flash the device directly, or use the USB bootloader from the original project.
+For using the original bootloader, the Atmega32 fuses are:
+
+Low: 10100000
+High: 11011000
+
 ### Schematics and contribution
 
 This project is based on other open-source projects.

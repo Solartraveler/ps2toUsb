@@ -1,0 +1,41 @@
+!-----New version for S26381-K257-L120 keyboard connected over PS/2 to USB adaptor----
+!copy as .Xmodmap to your home directory and make sure xmodmap reads it on startup
+
+keycode 191 = F13
+
+keycode 192 = F14
+
+keycode 193 = F15
+
+keycode 194 = F16
+
+keycode 195 = F17
+
+keycode 196 = F18
+
+keycode 197 = F19
+
+keycode 198 = F20
+
+keycode 199 = F21
+
+keycode 200 = F22
+
+!markier CH.CODE
+keycode 140 = F23
+
+!druck 1 - used as undo - but some windowmanager dont understand this
+keycode 139 = F27
+
+!druck 2 - used as redo - but some windowmanager dont understand this
+keycode 137 = F28
+
+!Zeichen einfügen
+keycode 118 = F24
+
+!Wort einfügen
+keycode 141 = F25
+
+!Zeile einfügen
+keycode 143 = F26
+
