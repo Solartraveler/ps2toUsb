@@ -1,8 +1,8 @@
 /*
 PS/2 keyboard to USB
-Copyright (C) 2020 Malte Marwedel
+Copyright (C) 2020-2021 Malte Marwedel
 
-Version 0.9
+Version 0.9.1
 
 What works:
 -All but one key on my TATEL-K282 S26381-K257-L120 Siemens Nixdorf keyboard
@@ -19,6 +19,9 @@ This source is for a USB Prog 3.0 hardware
 Connecting the PS/2 keyboard is really simple:
 PortB.2: PS2CLOCK
 PortB.1: PS2DATA
+
+Note: The 2KiB RAM are mostly used. Adding a 256byte global array will result
+in a stack overflow.
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -250,7 +253,6 @@ uint8_t usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = { /* USB 
     0xc0                           // END_COLLECTION
 };
 
-
 /* uart interrupt - send complete */
 ISR(USART_UDRE_vect)
 {
@@ -321,14 +323,20 @@ uint32_t timestampGet(void)
 void USBNInterfaceRequests(DeviceRequest *req,EPInfo* ep)
 {
 	printf_P(PSTR("interface request\r\n"));
+	/* Linux requests always exactly the size for the descriptor given in the
+	   usbKeyboardConf table.
+	   Windows requests this size + 64 bytes (seen for three different sizes)
+	   However the commercial working keyboard then just answer with the correct
+	   size, so we do it too.
+	 */
 	if ((req->bmRequestType == 0x81) && (req->bRequest == GET_DESCRIPTOR) &&
-	    (req->wValue == 0x2200) && (req->wLength == (sizeof(usbHidReportDescriptor))))
+	    (req->wValue == 0x2200) && (req->wLength >= (sizeof(usbHidReportDescriptor))))
 	{
-			ep->Buf = usbHidReportDescriptor;
-			ep->Index = 0;
-			ep->Size = USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH;
-			ep->DataPid = 1; //dont know why, but with 0 it wont work, found in _USBNGetDescriptor too
-			//printf("int togl: %u \r\n", ep->DataPid);
+		ep->Buf = usbHidReportDescriptor;
+		ep->Index = 0;
+		ep->Size = USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH;
+		ep->DataPid = 1; //dont know why, but with 0 it wont work, found in _USBNGetDescriptor too
+		//printf("int togl: %u \r\n", ep->DataPid);
 	} else {
 		printf_P(PSTR("%x %x %x %x %x\r\n"), req->bmRequestType, req->bRequest, req->wValue, req->wIndex, req->wLength);
 	}
@@ -653,7 +661,7 @@ void UpdateUsbKeystate(const uint32_t * keycodes, uint8_t modifiers) {
 		}
 	}
 	usbData[0] = modifiers; //bit positions already proper converted in ps2kbd
-	KeyboardToUsb(usbData, dataBytes);
+	KeyboardToUsb(usbData, USBBYTES); //Linux accepts shorter answers too (dataBytes). Windows not.
 #if 1
 	printf_P(PSTR("To usb: "));
 	for (int i = 0; i < dataBytes; i++) {
@@ -790,7 +798,7 @@ int main(void) {
 	printf_P(PSTR("PS/2 keyboard to USB\r\n"));
 
 	printf_P(PSTR("(c) 2020 by Malte Marwedel\r\n"));
-	printf_P(PSTR("Version 0.9\r\n"));
+	printf_P(PSTR("Version 0.9.1\r\n"));
 
 	_delay_ms(10);
 
