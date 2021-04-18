@@ -2,7 +2,7 @@
 PS/2 keyboard to USB
 Copyright (C) 2020-2021 Malte Marwedel
 
-Version 0.9.1
+Version 1.0.0
 
 What works:
 -All but one key on my TATEL-K282 S26381-K257-L120 Siemens Nixdorf keyboard
@@ -22,6 +22,21 @@ PortB.1: PS2DATA
 
 Note: The 2KiB RAM are mostly used. Adding a 256byte global array will result
 in a stack overflow.
+
+This software supports:
+Common HID protocol
+HID boot subclass (except status LEDs)
+The HID protocol uses an report format which simply match the boot subclass
+
+This software misses support:
+Keyboard boot protocol
+
+Tested systems (success):
+Linux Kernel 5.5
+Windows 10 2020H2
+
+
+
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -74,8 +89,10 @@ void interrupt_ep_send(void);
 #define STRING_PRODUCT_INDEX 1
 #define STRING_MANUFACTURER_INDEX 2
 
-#define USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH 61
-//#define USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH 35
+#define USB_CFG_HID_REPORT_DESCRIPTOR1_LENGTH 61
+#define USB_CFG_HID_REPORT_DESCRIPTOR2_LENGTH 41
+
+#define USB_CFG_LENGTH 66
 
 #define MAXKEYS 6
 
@@ -87,7 +104,7 @@ void interrupt_ep_send(void);
 //enough for ~18 chars
 #define RECORDSTEPS 40
 
-
+#define INTERFACEDESCRIPTORS 1
 
 //================ TYPEDEFS ====================
 
@@ -159,48 +176,77 @@ unsigned char usbKeyboard[] =
 /* Configuration descriptor
 Get with lsusb -vv -d 1781:
  */
-unsigned char usbKeyboardConf[] =
+unsigned char usbKeyboardConf[USB_CFG_LENGTH] =
 {
-  0x09,       // 9 length of this descriptor
-  0x02,       // descriptor type = configuration descriptor
-  0x29,0x00,  // total length with first interface ... (9+9+9+7+7)
-  0x01,       // number of interfaces //bene 01
-  0x01,       // number if this config. ( arg for setconfig)
-  0x00,       // string index for config
-  0x80,       // attrib for this configuration ( bus powerded, | 0x20 for remote wakup support)
-  100,       // power for this configuration in 2*mA (e.g. 200mA)
-    //InterfaceDescriptor
-  0x09,       // 9 length of this descriptor
-  0x04,       // descriptor type = interface descriptor
-  0x00,       // interface number
-  0x00,       // alternate setting for this interface
-  0x02,       // number endpoints without 0
-  0x03,       // class code -> HID
-  0x00,       // sub-class code
-  0x00,       // protocoll code 1-> keyboard, 2-> mouse
-  0x00,       // string index for interface
-/* HID keyboard descriptor */
-  0x9, /* size in bytes */
-  0x21, /* Descriptor type */
-  0x10, 0x01, /* HID class specification */
-  0x0, /* Country code */
-  0x1, /* num of hid class descriptors */
-  0x22, /* report descriptor type */
-  USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH, 0x0, /* length of report descriptor */
-  /* Endpoint Descriptor for in packets: keyboard to host*/
-  7,           /* sizeof(usbDescrEndpoint) */
-  5,  /* descriptor type = endpoint */
-  0x81,        /* IN endpoint number 1 */
-  0x03,        /* attrib: Interrupt endpoint */
-  USBBYTES, 0,    /* maximum packet size */
-  POLLINTERVAL,   /* in ms */
-  /* Endpoint Descriptor for out packets: host to keyboard LED status */
-  7,           /* sizeof(usbDescrEndpoint) */
-  5,  /* descriptor type = endpoint */
-  0x02,        /* OUT endpoint number 2 */
-  0x03,        /* attrib: Interrupt endpoint */
-  1, 0,    /* maximum packet size */
-  POLLINTERVAL,   /* in ms */
+  0x09,        // 9 length of this descriptor
+  0x02,        // descriptor type = configuration descriptor
+  USB_CFG_LENGTH, 0x00,   // total length with interfaces ... (9+(9+9+7+7) + (9+9+7))
+  INTERFACEDESCRIPTORS, // number of interfaces //1. for OS, 2. for BIOS
+  0x01,        // number if this config. ( arg for setconfig)
+  0x00,        // string index for config
+  0x80,        // attrib for this configuration ( bus powerded, | 0x20 for remote wakup support)
+  100,         // power for this configuration in 2*mA (e.g. 200mA)
+
+
+  //InterfaceDescriptor 2 for BIOS
+  0x09,        // 9 length of this descriptor
+  0x04,        // descriptor type = interface descriptor
+  0x00,        // interface number
+  0x01,        // alternate setting for this interface
+  0x01,        // number endpoints without 0
+  0x03,        // class code -> HID
+  0x01,        // sub-class code 1-> boot interface subclass
+  0x01,        // protocoll code 1-> keyboard, 2-> mouse
+  0x00,        // string index for interface
+  //  HID keyboard descriptor
+  0x9,         // length of this descritpor
+  0x21,        // Descriptor type
+  0x10, 0x01,  // HID class specification
+  0x0,         // Country code
+  0x1,         // num of hid class descriptors
+  0x22,        // report descriptor type
+  USB_CFG_HID_REPORT_DESCRIPTOR2_LENGTH, 0x0, // length of report descriptor
+  //  Endpoint Descriptor for in packets: keyboard to host
+  7,           // sizeof(usbDescrEndpoint)
+  5,           // descriptor type = endpoint
+  0x81,        // IN endpoint number 1
+  0x03,        // attrib: Interrupt endpoint
+  USBBYTES, 0, // maximum packet size
+  POLLINTERVAL,// in ms
+
+  //InterfaceDescriptor 1 for common OS with endpoint for LEDs
+  0x09,        // 9 length of this descriptor
+  0x04,        // descriptor type = interface descriptor
+  0x00,        // interface number
+  0x00,        // alternate setting for this interface
+  0x02,        // number endpoints without 0
+  0x03,        // class code -> HID
+  0x00,        // sub-class code
+  0x00,        // protocoll code 1-> keyboard, 2-> mouse
+  0x00,        // string index for interface
+  //  HID keyboard descriptor
+  0x9,         // 9 length of this descriptor
+  0x21,        // Descriptor type
+  0x10, 0x01,  // HID class specification
+  0x0,         // Country code
+  0x1,         // num of hid class descriptors
+  0x22,        // report descriptor type
+  USB_CFG_HID_REPORT_DESCRIPTOR1_LENGTH, 0x0,  // length of report descriptor
+  //  Endpoint Descriptor for in packets: keyboard to host
+  7,           // sizeof endpoint descriptor
+  5,           // descriptor type = endpoint
+  0x81,        // IN endpoint number 1
+  0x03,        // attrib: Interrupt endpoint
+  USBBYTES, 0, // maximum packet size
+  POLLINTERVAL,// in ms
+  //   Endpoint Descriptor for out packets: host to keyboard LED status
+  7,           // sizeof endpoint descriptor
+  5,           // descriptor type = endpoint
+  0x02,        // OUT endpoint number 2
+  0x03,        // attrib: Interrupt endpoint
+  1, 0,        // maximum packet size
+  POLLINTERVAL,// in ms
+
 };
 
 
@@ -214,7 +260,7 @@ unsigned char usbKeyboardConf[] =
  * LED code from:
  * https://embeddedguruji.blogspot.com/2019/04/learning-usb-hid-in-linux-part-7.html
  */
-uint8_t usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = { /* USB report descriptor */
+uint8_t usbHidReportDescriptor1[USB_CFG_HID_REPORT_DESCRIPTOR1_LENGTH] = { /* USB report descriptor */
     0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
     0x09, 0x06,                    // USAGE (Keyboard)
     0xa1, 0x01,                    // COLLECTION (Application)
@@ -250,6 +296,33 @@ uint8_t usbHidReportDescriptor[USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH] = { /* USB 
 //5 padding bits for LED
     0x95, 0x05,                    //   REPORT_COUNT (5)
     0x91, 0x01,                    //   OUTPUT (Const, Var, Abs)
+    0xc0                           // END_COLLECTION
+};
+
+uint8_t usbHidReportDescriptor2[USB_CFG_HID_REPORT_DESCRIPTOR2_LENGTH] = { /* USB report descriptor */
+    0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
+    0x09, 0x06,                    // USAGE (Keyboard)
+    0xa1, 0x01,                    // COLLECTION (Application)
+    0x05, 0x07,                    //   USAGE_PAGE (Keyboard)
+//The first byte - the 8 control keys
+    0x19, 0xe0,                    //   USAGE_MINIMUM (Keyboard LeftControl)
+    0x29, 0xe7,                    //   USAGE_MAXIMUM (Keyboard Right GUI)
+    0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+    0x25, 0x01,                    //   LOGICAL_MAXIMUM (1)
+    0x75, 0x01,                    //   REPORT_SIZE (1)
+    0x95, 0x08,                    //   REPORT_COUNT (8)
+    0x81, 0x02,                    //   INPUT (Data,Var,Abs)
+//the second byte - reserved by OEM
+    0x75, 0x08,                    //   REPORT_SIZE (8)
+    0x95, 0x01,                    //   REPORT_COUNT (1)
+    0x81, 0x03,                    //   INPUT (Const,Var,Abs)
+//bytes 2-6 - all the other keys
+    0x95, MAXKEYS,                 //   REPORT_COUNT (1) --> increase to 8 to get more than one keypress at the same time
+    0x75, 0x08,                    //   REPORT_SIZE (8)
+    0x25, 0xE7,                    //   LOGICAL_MAXIMUM (231)
+    0x19, 0x00,                    //   USAGE_MINIMUM (Reserved (no event indicated))
+    0x29, 0xE7,                    //   USAGE_MAXIMUM (Keyboard Application)
+    0x81, 0x00,                    //   INPUT (Data,Ary,Abs)
     0xc0                           // END_COLLECTION
 };
 
@@ -323,6 +396,7 @@ uint32_t timestampGet(void)
 void USBNInterfaceRequests(DeviceRequest *req,EPInfo* ep)
 {
 	printf_P(PSTR("interface request\r\n"));
+	ep->DataPid = 1; //control packets start always with the togl bit set
 	/* Linux requests always exactly the size for the descriptor given in the
 	   usbKeyboardConf table.
 	   Windows requests this size + 64 bytes (seen for three different sizes)
@@ -330,14 +404,40 @@ void USBNInterfaceRequests(DeviceRequest *req,EPInfo* ep)
 	   size, so we do it too.
 	 */
 	if ((req->bmRequestType == 0x81) && (req->bRequest == GET_DESCRIPTOR) &&
-	    (req->wValue == 0x2200) && (req->wLength >= (sizeof(usbHidReportDescriptor))))
+	    (req->wValue == 0x2200) && (req->wIndex < INTERFACEDESCRIPTORS))
 	{
-		ep->Buf = usbHidReportDescriptor;
-		ep->Index = 0;
-		ep->Size = USB_CFG_HID_REPORT_DESCRIPTOR_LENGTH;
-		ep->DataPid = 1; //dont know why, but with 0 it wont work, found in _USBNGetDescriptor too
-		//printf("int togl: %u \r\n", ep->DataPid);
-	} else {
+		//we simply guess by the size...
+		if ((req->wLength == sizeof(usbHidReportDescriptor2)) || (req->wLength == (sizeof(usbHidReportDescriptor2) + 64)))
+		{
+			printf_P(PSTR("Alternate HID descr\r\n"));
+			ep->Buf = usbHidReportDescriptor2;
+			ep->Index = 0;
+			ep->Size = USB_CFG_HID_REPORT_DESCRIPTOR2_LENGTH;
+		}
+		else if (req->wLength >= sizeof(usbHidReportDescriptor1))
+		{
+			//this is our common default case
+			printf_P(PSTR("Default HID descr\r\n"));
+			ep->Buf = usbHidReportDescriptor1;
+			ep->Index = 0;
+			ep->Size = USB_CFG_HID_REPORT_DESCRIPTOR1_LENGTH;
+		}
+	}
+	else if ((req->bmRequestType == 0x1) && (req->bRequest == SET_INTERFACE) &&
+		(req->wValue <= 1) && (req->wIndex < INTERFACEDESCRIPTORS))
+	{
+		//The notebook does this as class request, Windows as standard request -> interface request
+		uint8_t reportProtocol = req->wValue;
+		uint8_t setInterface = req->wIndex;
+		printf_P(PSTR("Set interface(1) %u, reportProt %u\r\n"), setInterface, reportProtocol);
+		if (!reportProtocol)
+		{
+			printf_P(PSTR("Error, boot protocol not supported - just ignoring this\r\n"));
+		}
+		_USBNTransmitEmtpy(ep);
+	}
+	else
+	{
 		printf_P(PSTR("%x %x %x %x %x\r\n"), req->bmRequestType, req->bRequest, req->wValue, req->wIndex, req->wLength);
 	}
 }
@@ -345,7 +445,7 @@ void USBNInterfaceRequests(DeviceRequest *req,EPInfo* ep)
 /* id need for live update of firmware */
 void USBNDecodeVendorRequest(DeviceRequest *req)
 {
-	printf("vreq %x\r\n", req->bRequest);
+	printf_P(PSTR("vreq %x\r\n"), req->bRequest);
 }
 
 // class requests
@@ -363,9 +463,21 @@ void USBNDecodeClassRequest(DeviceRequest *req,EPInfo* ep)
 		/*The host will *not* use this method for notifiying LEDs, if there is a
 		  separate out endpoint. (At least under Linux).
 		*/
+		_USBNTransmitEmtpy(ep); //confirm the (failed) LED change...
 		printf_P(PSTR("LEDs changed by EP0, how do we get byte9?\r\n"));
+	} else if ((req->bmRequestType == 0x21) && (req->bRequest == SET_INTERFACE) &&
+	    (req->wValue <= 1) && (req->wIndex < INTERFACEDESCRIPTORS)) {
+		//The notebook does this as class request, Windows as standard request -> interface request
+		uint8_t reportProtocol = req->wValue;
+		uint8_t setInterface = req->wIndex;
+		printf_P(PSTR("Set interface(2) %u, reportProt %u\r\n"), setInterface, reportProtocol);
+		if (!reportProtocol)
+		{
+			printf_P(PSTR("Error, boot protocol not supported - just ignoring this\r\n"));
+		}
+		_USBNTransmitEmtpy(ep);
 	} else {
-		printf("dec %x %x %x %x %x\r\n", req->bmRequestType, req->bRequest, req->wValue, req->wIndex, req->wLength);
+		printf_P(PSTR("dec %x %x %x %x %x\r\n"), req->bmRequestType, req->bRequest, req->wValue, req->wIndex, req->wLength);
 	}
 }
 
@@ -797,8 +909,8 @@ int main(void) {
 
 	printf_P(PSTR("PS/2 keyboard to USB\r\n"));
 
-	printf_P(PSTR("(c) 2020 by Malte Marwedel\r\n"));
-	printf_P(PSTR("Version 0.9.1\r\n"));
+	printf_P(PSTR("(c) 2020-2021 by Malte Marwedel\r\n"));
+	printf_P(PSTR("Version 1.0.0\r\n"));
 
 	_delay_ms(10);
 
@@ -970,7 +1082,7 @@ int main(void) {
 		}
 		uint32_t resetEventsNow = USBNGetResetEvents();
 		if (resetEventsNow != resetEventsLast) {
-			printf("USB reset events: %lu\r\n", (unsigned long)resetEventsNow);
+			printf_P(PSTR("USB reset events: %lu\r\n"), (unsigned long)resetEventsNow);
 			resetEventsLast = resetEventsNow;
 		}
 		wdt_reset();

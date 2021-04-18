@@ -105,11 +105,11 @@ void _USBNGetDescriptor(DeviceRequest *req);
 void _USBNSetConfiguration(DeviceRequest *req);
 void _USBNClearFeature(void);
 
-void _USBNToggle(EPInfo* ep);
 void _USBNTransmit(EPInfo* ep);
 void _USBNReceive(EPInfo* ep);
 
 void _USBNTransmitEmtpy(EPInfo* ep);
+void _USBNTransmitWithToggle(EPInfo* ep);
 
 void _USBNTransmitFIFO0(void);
 void _USBNReceiveFIFO0(void);

@@ -1,0 +1,293 @@
+=============== Linux ====================================================
+Start USB...
+sd3
+sd3
+resume
+80 6 0 1 0 0 40 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+eop
+0 5 7 0 0 0 0 0
+SET ADDRESS
+80 6 0 1 0 0 12 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+80 6 0 2 0 0 9 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 2 0 0 42 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 3 0 0 ff 0
+GET DESCRIPTOR
+80 6 1 3 9 4 ff 0
+GET DESCRIPTOR
+80 6 2 3 9 4 ff 0
+GET DESCRIPTOR
+0 9 1 0 0 0 0 0
+SET CONFIGURATION
+21 a 0 0 0 0 0 0
+Class request
+Set idle req
+81 6 0 22 0 0 3d 0
+interface request
+Default HID descr
+Init PS/2...
+Check PS/2 keyboard...
+Send done
+Entering main loop...
+USB reset events: 225
+Ping
+
+========== Windows 10 2020H2 ======================
+Start USB...
+sd3
+sd3
+resume
+eop
+80 6 0 1 0 0 40 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+eop
+0 5 7 0 0 0 0 0
+SET ADDRESS
+80 6 0 1 0 0 12 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+80 6 0 2 0 0 ff 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 3 0 0 ff 0
+GET DESCRIPTOR
+80 6 1 3 9 4 ff 0
+GET DESCRIPTOR
+80 6 0 1 0 0 12 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+80 6 0 2 0 0 9 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 2 0 0 42 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+0 9 1 0 0 0 0 0
+SET CONFIGURATION
+1 b 1 0 0 0 0 0
+interface request
+Set interface(1) 0, reportProt 1
+21 a 0 0 0 0 0 0
+Class request
+Set idle req
+81 6 0 22 0 0 Init PS/2...
+Check PS/2 keyboard...
+Send done
+Entering main loop...
+USB reset events: 225
+Ping
+
+========== Asus Eee 1015PEM BIOS ========================
+Start USB...
+sd3
+sd3
+resume
+eop
+sd3
+sd3
+resume
+80 6 0 1 0 0 8 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+80 6 0 1 0 0 12 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+80 6 0 2 0 0 ff 1
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+0 5 2 0 0 0 0 0
+SET ADDRESS
+0 9 1 0 0 0 0 0
+SET CONFIGURATION
+21 a 0 0 0 0 0 0
+Class request
+Set idle req
+21 b 0 0 0 0 0 0
+Class request
+Set interface(2) 0, reportProt 0
+Error, boot protocol not supported - just ignoring this
+0 3 1 0 0 0 0 0
+SET FEATURE
+21 9 0 2 0 0 1 0
+Class request
+LEDs changed by EP0, how do we get byte9?
+Init PS/2...
+Check PS/2 keyboard...
+Send done
+Entering main loop...
+USB reset events: 452
+Ping
+Ping
+Ping
+Press 0x0-0xe074
+To usb: 0 0 4f
+Release 0xe074
+To usb: 0 0
+Press 0x0-0xe074
+To usb: 0 0 4f
+Release 0xe074
+To usb: 0 0
+Ping
+Press 0x0-0xe074
+To usb: 0 0 4f
+Release 0xe074
+To usb: 0 0
+Press 0x0-0xe074
+To usb: 0 0 4f
+Release 0xe074
+To usb: 0 0
+Press 0x0-0xe06b
+To usb: 0 0 50
+Release 0xe06b
+To usb: 0 0
+Press 0x0-0xe06b
+To usb: 0 0 50
+Release 0xe06b
+To usb: 0 0
+Press 0x0-0xe06b
+To usb: 0 0 50
+Release 0xe06b
+To usb: 0 0
+Press 0x0-0xe06b
+To usb: 0 0 50
+Release 0xe06b
+To usb: 0 0
+Ping
+
+============== Thinkpad T440 ===========================
+Start USB...
+sd3
+sd3
+resume
+80 6 0 1 0 0 8 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+0 5 3 0 0 0 0 0
+SET ADDRESS
+80 6 0 1 0 0 12 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+80 6 0 2 0 0 8 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 2 0 0 42 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 3 0 0 2 0
+GET DESCRIPTOR
+80 6 0 3 0 0 4 0
+GET DESCRIPTOR
+80 6 0 3 0 0 4 0
+GET DESCRIPTOR
+0 9 1 0 0 0 0 0
+SET CONFIGURATION
+0 9 1 0 0 0 0 0
+SET CONFIGURATION
+21 b 0 0 0 0 0 0
+Class request
+Set interface(2) 0, reportProt 0
+Error, boot protocol not Init PS/2...
+Check PS/2 keyboard...
+Send done
+Entering main loop...
+USB reset events: 82
+Ping
+Ping
+21 9 0 2 0 0 1 0
+Class request
+LEDs changed by EP0, how do we get byte9?
+Ping
+
+===== Intel NUC6CAYB =========================
+Start USB...
+sd3
+sd3
+resume
+80 6 0 1 0 0 8 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+0 5 a 0 0 0 0 0
+SET ADDRESS
+80 6 0 1 0 0 12 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+80 6 0 2 0 0 ff 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+0 9 1 0 0 0 0 0
+SET CONFIGURATION
+1 b 0 0 0 0 0 0
+interface request
+Set interface(1) 0, reportProt 0
+Error, boot protocol not supported - just ignoring this
+80 6 0 2 0 0 9 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 2 0 0 42 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 3 0 0 ff 0
+GET DESCRIPTOR
+80 6 2 3 9 4 ff 0
+GET DESCRIPTOR
+80 6 1 3 9 4 ff 0
+GET DESCRIPTOR
+80 6 0 2 0 0 ff 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+21 aGot 1 bytInit PS/2...
+Check PS/2 keyboard...
+Send done
+Entering main loop...
+USB reset events: 409
+Ping
+
+=========== Gigabyte AB350M-Gaming 3 ========================
+Start USB...
+sd3
+sd3
+resume
+80 6 0 1 0 0 8 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+0 5 5 0 0 0 0 0
+SET ADDRESS
+80 6 0 1 0 0 12 0
+GET DESCRIPTOR
+DEVICE DESCRIPTOR
+80 6 0 2 0 0 ff 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+0 9 1 0 0 0 0 0
+SET CONFIGURATION
+1 b 0 0 0 0 0 0
+interface request
+Set interface(1) 0, reportProt 0
+Error, boot protocol not supported - just ignoring this
+80 6 0 2 0 0 9 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 2 0 0 42 0
+GET DESCRIPTOR
+CONFIGURATION DESCRIPTOR
+80 6 0 3 0 0 ff 0
+GET DESCRIPTOR
+80 6 2 3 9 4 ff 0
+GET DESCRIPTOR
+80 6 1 3 9 4 ff 0
+GET DESCRIPTOR
+80 6 21 a Got Got 1 bytes
+Init PS/2...
+Check PS/2 keyboard...
+Send done
+Entering main loop...
+USB reset events: 112
+Ping

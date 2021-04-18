@@ -1,6 +1,8 @@
 /* usbn960x.c
 * Copyright (C) 2006  Benedikt Sauter
 *
+* modified 2020, 2021 by Malte Marwedel
+*
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation; either version 2 of the License, or
@@ -20,6 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <avr/interrupt.h>
+#include <avr/pgmspace.h>
 
 #include "main.h"
 //requires main.h
@@ -29,7 +32,7 @@
 
 #include "../../usbn2mc.h"
 
-#define USBNDebug(X) printf("%s", X)
+#define USBNDebug(X) printf_P(PSTR(X))
 
 EPInfo	EP0rx;
 EPInfo	EP0tx;
@@ -205,27 +208,27 @@ void _USBNAlternateEvent(void)
 // ********************************************************************
 void _USBNReceiveFIFO0(void)
 {
-  	unsigned char rxstatus;
-  	char Buf[8];
-  	DeviceRequest *req;
-  	int i;
+	unsigned char rxstatus;
+	char Buf[8] = {0};
+	DeviceRequest *req;
+	int i;
 
-  	#if DEBUG
-  	USBNDebug("rx\r\n");
-  	#endif
-  	rxstatus = USBNRead(RXS0);
+	#if DEBUG
+	USBNDebug("rx\r\n");
+	#endif
+	rxstatus = USBNRead(RXS0);
 
-  	if(rxstatus & SETUP_R)
-  	{
-    		for(i=0;i<8;i++){
-      			Buf[i] = USBNRead(EP0rx.usbnData);
-    		}
+	if(rxstatus & SETUP_R)
+	{
+		for(i=0;i<8;i++){
+			Buf[i] = USBNRead(EP0rx.usbnData);
+		}
 
-    		#if DEBUG
-    		for(i=0;i<8;i++)
-      			SendHex(Buf[i]); // type - get descr or set address
-    		USBNDebug("\r\n");
-    		#endif
+		//#if DEBUG
+		for(i=0;i<8;i++)
+			 printf_P(PSTR("%02x "), Buf[i]); // type - get descr or set address
+		USBNDebug("\r\n");
+		//#endif
 
 		req = (DeviceRequest*)(Buf);
 
@@ -256,9 +259,7 @@ void _USBNReceiveFIFO0(void)
 						break;
 						#endif
 						case GET_DESCRIPTOR:
-							#if DEBUG
 							USBNDebug("GET DESCRIPTOR\n\r");
-							#endif
 							_USBNGetDescriptor(req);
 						break;
 							#if 0
@@ -274,25 +275,19 @@ void _USBNReceiveFIFO0(void)
 						break;
 							#endif
 						case SET_ADDRESS:
-							#if DEBUG
-							USBNDebug("SET ADDRESS ");
-							#endif
+							USBNDebug("SET ADDRESS\n\r");
 							USBNWrite(EPC0,DEF);
 							USBNWrite(FAR,AD_EN+req->wValue);
 						break;
 						case SET_CONFIGURATION:
-							#if DEBUG
 							USBNDebug("SET CONFIGURATION\n\r");
-							#endif
 							_USBNSetConfiguration(req);
 						break;
-						#if 0
 						case SET_FEATURE:
-							#if DEBUG
+							//done by the BIOS, sets something about remote wakeup. We ignore this
 							USBNDebug("SET FEATURE\n\r");
-							#endif
+							_USBNTransmitEmtpy(&EP0tx);
 						break;
-						#endif
 						case SET_INTERFACE:
 							#if DEBUG
 							USBNDebug("SET INTERFACE\n\r");
@@ -318,25 +313,17 @@ void _USBNReceiveFIFO0(void)
 			break;
 			//#if 0
 			case DO_CLASS:				// class request
-				#if DEBUG
 				USBNDebug("Class request\n\r");
-				#endif
 				USBNDecodeClassRequest(req,&EP0tx);
 				_USBNTransmit(&EP0tx);
-				//USBNWrite(TXC0,TX_TOGL+TX_EN);  //enable the TX (DATA1)
 			break;
 			case DO_VENDOR:				// vendor request
-				#if DEBUG
 				USBNDebug("Vendor request\n\r");
-				#endif
 				USBNDecodeVendorRequest(req);
 				_USBNTransmit(&EP0tx);
-				//USBNWrite(TXC0,TX_TOGL+TX_EN);  //enable the TX (DATA1)
 			break;
 			default:					// unsupported req type
-				#if DEBUG
 				USBNDebug("unsupported req type\r\n");
-				#endif
 				USBNWrite(EPC0,USBNRead(EPC0)+STALL);      // stall the endpoint
 			break;
 		}
@@ -347,7 +334,9 @@ void _USBNReceiveFIFO0(void)
 
 		// only for stage 2 transfers
 		if(req->bmRequestType == 0x00)
+		{
 			USBNWrite(TXC0,TX_TOGL+TX_EN);  //enable the TX (DATA1)
+		}
 	}
 	else                              // if not a setuppacket
 	{
@@ -431,12 +420,8 @@ void _USBNReceive(EPInfo* ep)
   */
 }
 
-void _USBNTransmitEmtpy(EPInfo* ep)
+void _USBNTransmitWithToggle(EPInfo* ep)
 {
-  USBNWrite(TXC0,FLUSH);       //send data to the FIFO
-  while (USBNRead(TXC0) & FLUSH); //Malte: otherwise the usbn960x sometimes sends invalid packages
-  //USBNDebug(" ");
-
   // toggle mechanism
   if(ep->DataPid == 1)
   {
@@ -450,6 +435,14 @@ void _USBNTransmitEmtpy(EPInfo* ep)
   }
 }
 
+void _USBNTransmitEmtpy(EPInfo* ep)
+{
+  USBNWrite(TXC0,FLUSH);       //send data to the FIFO
+  while (USBNRead(TXC0) & FLUSH); //Malte: otherwise the usbn960x sometimes sends invalid packages
+  //USBNDebug(" ");
+  USBNWrite(ep->usbnCommand,TX_TOGL+TX_EN); //answers always start with the toggle bit set
+}
+
 
 void _USBNTransmit(EPInfo* ep)
 {
@@ -458,7 +451,6 @@ void _USBNTransmit(EPInfo* ep)
   {
     if(ep->Index < ep->Size)
     {
-
       USBNWrite(TXC0,FLUSH);       //send data to the FIFO
       while (USBNRead(TXC0) & FLUSH); //Malte: otherwise the usbn960x sometimes sends invalid packages
       //USBNDebug(" ");
@@ -477,17 +469,7 @@ void _USBNTransmit(EPInfo* ep)
       USBNWrite(RXC0,RX_EN);
     }
 
-    // toggle mechanism
-    if(ep->DataPid == 1)
-    {
-      USBNWrite(ep->usbnCommand,TX_TOGL+TX_EN);
-      ep->DataPid=0;
-    }
-    else
-    {
-      USBNWrite(ep->usbnCommand,TX_EN);
-      ep->DataPid=1;
-    }
+    _USBNTransmitWithToggle(ep);
   }
 }
 
@@ -551,24 +533,39 @@ void _USBNGetDescriptor(DeviceRequest *req)
   switch (type)
   {
     case DEVICE:
-      #if DEBUG
       USBNDebug("DEVICE DESCRIPTOR\n\r");
-      #endif
       EP0tx.Size = DeviceDescriptor[0];
       EP0tx.Buf = DeviceDescriptor;
 
       // first get descriptor request is
       // always be answered with first 8 unsigned chars of dev descriptor
-      if(req->wLength==0x40)
+      // Linux and Windows therefore request 64 bytes at the first call
+      // The BIOS however (at least the Asus Eee netbook I tested)
+      // reqeusts just 8. So comparing to 64 is insufficient.
+      //printf_P(PSTR("L:%u\n\r"), req->wLength);
+      if(req->wLength != DeviceDescriptor[0])
+      {
         EP0tx.Size = 8;
+        //USBNDebug("D First\n\r");
+      }
     break;
     case CONFIGURATION:
-      #if DEBUG
-      USBNDebug("CONFIGURATION DESCRIPTOR ");
-      #endif
-
+      //Linux requests first 9 bytes and then 41 bytes, the later one is
+      //exactly the size of the array.
+      //The Asus Eee BIOS however requests simply 511 bytes at the first call.
+      //The GA-AB350M-Gaming 3 request 25 bytes at the first call.
+      //The Lenovo T440 BIOS requests 8 and then 41 bytes
+      USBNDebug("CONFIGURATION DESCRIPTOR\n\r");
+      //printf_P(PSTR("L:%u\n\r"), req->wLength);
       // send complete tree
-      EP0tx.Size =req->wLength;
+      if (req->wLength > ConfigurationDescriptor[2]) //only works for <= 255 bytes
+      {
+        EP0tx.Size = ConfigurationDescriptor[2]; //9 bytes
+      }
+      else
+      {
+        EP0tx.Size = req->wLength;
+      }
       EP0tx.Buf = ConfigurationDescriptor;
 
     break;
@@ -612,9 +609,8 @@ void _USBNSetConfiguration(DeviceRequest *req)
 	USBNWrite(RXC1, FLUSH);
 	USBNWrite(EPC2,EP_EN+0x02); //rx endpoint 2 with address 2
 	USBNWrite(RXC1,RX_EN);
-
-	USBNWrite(TXC0,TX_TOGL+TX_EN);  //enable the TX (DATA1)
-
+	while (USBNRead(TXC0) & FLUSH); //Malte: otherwise the usbn960x sometimes sends invalid packages
+	//the caller will already send the data, because this request has bmRequestType = 0
 }
 
 uint32_t USBNGetResetEvents(void)
