@@ -8,12 +8,12 @@ PS/2 to USB converter, based on an AVR
 - Sending the LED state back from the host under Linux
 
 - The keyboard was tested with the following platforms:
--    Linux 5.5.9
--    Windows 10 2020H2
--    Asus Eee 1015PEM BIOS
--    Thinkpad T440 BIOS
--    Intel NUC6CAYB BIOS
--    Gigabyte AB350M-Gaming 3 BIOS
+-     Linux 5.5.9
+-     Windows 10 2020H2
+-     Asus Eee 1015PEM BIOS
+-     Thinkpad T440 BIOS
+-     Intel NUC6CAYB BIOS
+-     Gigabyte AB350M-Gaming 3 BIOS
 
 - Macro recorder and playback
 
