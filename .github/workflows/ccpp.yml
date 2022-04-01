@@ -12,9 +12,13 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y gcc-avr avr-libc
+        sudo apt install -y gcc-avr avr-libc libwxgtk3.0-gtk3-dev libcurl4-gnutls-dev libusb-dev
     - name: make
       run: make -C src
+    - name: make usbprog
+      run: |
+        cd usbprog/usbprog-0.1.8
+        ./configure
     - name: Artifacts upload
       uses: actions/upload-artifact@v2
       with:

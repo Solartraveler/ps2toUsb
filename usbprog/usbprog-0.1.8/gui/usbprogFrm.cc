@@ -285,7 +285,7 @@ void usbprogFrm::CreateGUIControls()
 
     // file dialog
 	m_fileDialog = new wxFileDialog(m_panel, wxT("Choose a file"),
-            wxT(""), wxT(""), wxT("*.bin"), wxOPEN);
+            wxT(""), wxT(""), wxT("*.bin"), wxFC_OPEN); //Malte: Was wxOPEN
 
     m_topBox->Add(topSizer, wxEXPAND, wxALL, 10);
 
@@ -620,7 +620,7 @@ void usbprogFrm::enableDisableDebug(wxCommandEvent &evt)
         dbg->setFileHandle(NULL);
     } else {
         wxFileDialog fdg(m_panel, wxT("Choose a file"),
-            wxT(""), wxT(""), wxT("*.log"), wxSAVE);
+            wxT(""), wxT(""), wxT("*.log"), wxFC_SAVE); //Malte: Was wxSAVE
         if (fdg.ShowModal() != wxID_OK)
             dbg->setFileHandle(stderr);
         else {

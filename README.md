@@ -51,4 +51,33 @@ The sourcecode of which this project is based on, can be found in the repository
 The sourcecode for decoding the PS/2 protocol is a modified version from:
 [LIV2/AVR-PS2-KBC](https://github.com/LIV2/AVR-PS2-KBC)
 
+## USB Prog
+The original host program for uploading the firmware has been added.
+Some modifications have been done to allow compilation on a current (2022) Linux system.
 
+Compile & run:
+```
+sudo apt install libwxgtk3.0-gtk3-dev libcurl4-gnutls-dev libusb-dev
+./configure
+make -j
+./gui/usbprog-gui
+```
+
+If the device is not found, a udev rule might be needed:
+
+Save a file /etc/udev/rules.d/80-usbprog.rules with the following content:
+
+```
+#
+# AVRISP mkII emulation mode
+ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="2104", GROUP="dialout", MODE="0660"
+#
+# usbprog bootloader
+ATTRS{idVendor}=="1781", ATTRS{idProduct}=="0c62", GROUP="dialout", MODE="0660"
+```
+
+Then execute:
+```
+sudo udevadm control --reload-rules
+sudo udevadm trigger --subsystem-match=usb
+```
