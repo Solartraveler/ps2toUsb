@@ -55,12 +55,21 @@ The sourcecode for decoding the PS/2 protocol is a modified version from:
 The original host program for uploading the firmware has been added.
 Some modifications have been done to allow compilation on a current (2022) Linux system.
 
-Compile & run:
+Compile & run (command two and three seem to be required for Ubuntu, but not for Debian):
 ```
 sudo apt install libwxgtk3.0-gtk3-dev libcurl4-gnutls-dev libusb-dev
 ./configure
+make maintainer-clean
+./configure
 make -j
 ./gui/usbprog-gui
+```
+
+Or you could also run the binary from the build artifacts:
+```
+cd usbprog/usbprog-0.1.8/gui/.libs
+chmod u+x ./usbprog-gui
+LD_PRELOAD=../../usbprog/.libs/libusbprog.so ./usbprog-gui
 ```
 
 If the device is not found, a udev rule might be needed:

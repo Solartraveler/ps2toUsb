@@ -19,8 +19,15 @@ jobs:
       run: |
         cd usbprog/usbprog-0.1.8
         ./configure
+        make maintainer-clean
+        ./bootstrap
+        ./configure
+        make -j
     - name: Artifacts upload
       uses: actions/upload-artifact@v2
       with:
-        name: Binary-for-atemega32
-        path: src/main.hex
+        name: Binary-for-atmega32-and-usbprog
+        path: |
+          src/main.hex
+          usbprog/*/gui/.libs/usbprog-gui
+          usbprog/*/usbprog/.libs/libusbprog.*
